@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:tflite_app/screens/model_screen.dart';
 import 'package:tflite_app/services/tflite_service.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final tfService = TFService();
-  await tfService.loadModel();
 
-  runApp(MyApp(tfService: tfService));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final TFService tfService;
-  const MyApp({super.key, required this.tfService});
+  const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -23,7 +20,7 @@ class MyApp extends StatelessWidget {
         // This is the theme of your application.
         colorScheme: .fromSeed(seedColor: Colors.blue),
       ),
-      home: ModelScreen(tfService: tfService),
+      home: ModelScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

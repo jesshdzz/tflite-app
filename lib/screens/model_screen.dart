@@ -6,15 +6,15 @@ import 'package:logger/logger.dart';
 import 'dart:io';
 
 class ModelScreen extends StatefulWidget {
-  // TFService es un servicio asincrono para obtener la respesta del modelo
-  final TFService tfService;
-  const ModelScreen({super.key, required this.tfService});
+  const ModelScreen({super.key});
 
   @override
   ModelScreenState createState() => ModelScreenState();
 }
 
 class ModelScreenState extends State<ModelScreen> {
+  final TFService tfService = TFService();
+
   List<String> _etiquetas = [];
   String _output = "";
   File? _image;
@@ -36,6 +36,11 @@ class ModelScreenState extends State<ModelScreen> {
   void initState() {
     super.initState();
     _cargarEtiquetas();
+    _cargarModelo();
+  }
+
+  Future<void> _cargarModelo() async {
+    await tfService.loadModel();
   }
 
   // Cargar las etiquetas del modelo
@@ -62,16 +67,27 @@ class ModelScreenState extends State<ModelScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: source);
 
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-        _isEnabled = true;
-        _output = "";
-        _confidence = 0.0;
-      });
+      if (pickedFile != null) {
+        setState(() {
+          _image = File(pickedFile.path);
+          _isEnabled = true;
+          _output = "";
+          _confidence = 0.0;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error al acceder a la cámara/galeria: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -88,9 +104,19 @@ class ModelScreenState extends State<ModelScreen> {
     });
 
     try {
-      List<double> result = await widget.tfService.runModel(_image!);
+      List<double> result = await tfService.runModel(_image!);
 
       final int predictedIndex = _argMax(result);
+
+      if (predictedIndex >= _etiquetas.length) {
+        setState(() {
+          _output = 'Error al ejecutar el modelo: Indice $predictedIndex fuera de rango';
+          _isEnabled = true;
+          _isLoading = false;
+        });
+        return;
+      }
+
       final String predictedLabel = _etiquetas[predictedIndex];
       final double confidence = result[predictedIndex];
 

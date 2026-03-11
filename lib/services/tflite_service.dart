@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 import 'package:logger/logger.dart';
@@ -41,36 +42,9 @@ class TFService {
       return [];
     }
 
-    // decodifica la imagen
-    img.Image? imageInput = img.decodeImage(imageFile.readAsBytesSync())!;
-    img.Image resizedImage = img.copyResize(imageInput, width: 224, height: 224);
-
-    // 3 ==> r g b
-    var input = List.generate(
-      1 * 224 * 224 * 3,
-      (index) => 0.0,
-    ).reshape([1, 224, 224, 3]);
-    // reshape para tener la imagen en 4 dimensiones
-    // asi lo requiere el modelo como entrada
-
-    for (var y = 0; y < resizedImage.height; y++) {
-      for (var x = 0; x < resizedImage.width; x++) {
-        var pixel = resizedImage.getPixel(x, y);
-        // obtener los valores RGB y normalizarlos entre 0 y 1
-        var r = pixel.r / 255.0; // 0.15
-        var g = pixel.g / 255.0;
-        var b = pixel.b / 255.0;
-
-        // asignar los valores al tensor de entrada
-        input[0][y][x][0] = r;
-        input[0][y][x][1] = g;
-        input[0][y][x][2] = b;
-      }
-    }
-
-    // generamos para la salida una matriz de 1 x 1001
+    var input = await compute(_preprocesarImagen, imageFile.path);
     var output = List.filled(1 * 1001, 0.0).reshape([1, 1001]);
-
+    
     try {
       _interpreter!.run(input, output);
       customLogger.i('Model inference completed successfully $output');
@@ -88,5 +62,22 @@ class TFService {
   }
 }
 
+List _preprocesarImagen(String imagePath) {
+  final bytes = File(imagePath).readAsBytesSync();
+  img.Image? imageInput = img.decodeImage(bytes)!;
+  img.Image resizedImage = img.copyResize(imageInput, width: 224, height: 224);
 
-/* */
+  var input = List.generate(1 * 224 * 224 * 3, (index) => 0.0).reshape([1, 224, 224, 3]);
+
+  for (var y = 0; y < resizedImage.height; y++) {
+    for (var x = 0; x < resizedImage.width; x++) {
+      var pixel = resizedImage.getPixel(x, y);
+      // obtener los valores RGB y normalizarlos entre 0 y 1
+      input[0][y][x][0] = pixel.r / 255.0; // 0.15
+      input[0][y][x][1] = pixel.g / 255.0;
+      input[0][y][x][2] = pixel.b / 255.0;
+    }
+  }
+
+  return input;
+}
