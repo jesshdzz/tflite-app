@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         // This is the theme of your application.
         colorScheme: .fromSeed(seedColor: Colors.blue),
       ),
-      home: ModelScreen(),
+      home: const ModelScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

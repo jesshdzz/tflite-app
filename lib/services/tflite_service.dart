@@ -44,7 +44,7 @@ class TFService {
 
     var input = await compute(_preprocesarImagen, imageFile.path);
     var output = List.filled(1 * 1001, 0.0).reshape([1, 1001]);
-    
+
     try {
       _interpreter!.run(input, output);
       customLogger.i('Model inference completed successfully $output');
@@ -67,7 +67,10 @@ List _preprocesarImagen(String imagePath) {
   img.Image? imageInput = img.decodeImage(bytes)!;
   img.Image resizedImage = img.copyResize(imageInput, width: 224, height: 224);
 
-  var input = List.generate(1 * 224 * 224 * 3, (index) => 0.0).reshape([1, 224, 224, 3]);
+  var input = List.generate(
+    1 * 224 * 224 * 3,
+    (index) => 0.0,
+  ).reshape([1, 224, 224, 3]);
 
   for (var y = 0; y < resizedImage.height; y++) {
     for (var x = 0; x < resizedImage.width; x++) {
