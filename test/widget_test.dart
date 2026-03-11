@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tflite_app/main.dart';
-import 'package:tflite_app/services.dart';
+import 'package:tflite_app/services/tflite_service.dart';
 
 void main() async {
   final tfService = TFService();

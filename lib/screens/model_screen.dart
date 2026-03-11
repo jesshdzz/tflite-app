@@ -16,9 +16,11 @@ class ModelScreen extends StatefulWidget {
 
 class ModelScreenState extends State<ModelScreen> {
   List<String> _etiquetas = [];
-  String _output = " ";
+  String _output = "";
   File? _image;
   bool _isEnabled = false;
+  bool _isLoading = false;
+  double _confidence = 0.0;
 
   var customLogger = Logger(
     printer: PrettyPrinter(
@@ -79,6 +81,10 @@ class ModelScreenState extends State<ModelScreen> {
       return;
     }
 
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       List<double> result = await widget.tfService.runModel(_image!);
 
@@ -89,14 +95,19 @@ class ModelScreenState extends State<ModelScreen> {
       customLogger.i('Result : $result');
       setState(() {
         //_output = result.toString();
-        _output =
-            'Predicción: $predictedLabel\nConfianza: ${(confidence * 100).toStringAsFixed(2)}%';
+        _output = 'Predicción: $predictedLabel';
+        _confidence = (confidence * 100);
       });
     } catch (e) {
       setState(() {
         _output = 'Error al ejecutar el modelo: $e';
       });
     }
+
+    setState(() {
+      _isLoading = false;
+      _isEnabled = false;
+    });
   }
 
   @override
@@ -108,7 +119,7 @@ class ModelScreenState extends State<ModelScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _image == null
+              !_isEnabled
                   ? Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
@@ -116,24 +127,68 @@ class ModelScreenState extends State<ModelScreen> {
                         textAlign: TextAlign.center,
                       ),
                     )
-                  : Image.file(_image!, height: 200),
+                  : SizedBox(height: 20),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey, width: 2),
+                  borderRadius: BorderRadius.circular(5),
+                  color: Colors.grey.shade200,
+                ),
+                width: 300,
+                height: 300,
+                child: _image != null
+                    ? Image.file(_image!)
+                    : Center(child: Icon(Icons.image, size: 100, color: Colors.grey)),
+              ),
+              SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 10,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => _pickImage(ImageSource.camera),
+                    icon: Icon(Icons.camera_alt),
+                    label: Text("Foto"),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => _pickImage(ImageSource.gallery),
+                    icon: Icon(Icons.image),
+                    label: Text("Imagen"),
+                  ),
+                ],
+              ),
               SizedBox(height: 50),
               ElevatedButton(
-                onPressed: () => _pickImage(ImageSource.camera),
-                child: Text("Tomar Foto"),
-              ),
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () => _pickImage(ImageSource.gallery),
-                child: Text("Seleccionar Imagen"),
-              ),
-              SizedBox(height: 50),
-              ElevatedButton(
-                onPressed: _isEnabled ? _runModel : null,
+                onPressed: _isEnabled && !_isLoading ? _runModel : null,
                 child: Text("Ejecutar Modelo"),
               ),
-              SizedBox(height: 50),
-              Text(_output, textAlign: TextAlign.center),
+              SizedBox(height: 20),
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : _output.isEmpty
+                  ? SizedBox()
+                  : Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              _output,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 10),
+                            LinearProgressIndicator(value: _confidence / 100),
+                            SizedBox(height: 5),
+                            Text(
+                              "Confianza: ${_confidence.toStringAsFixed(2)}%",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
             ],
           ),
         ),
