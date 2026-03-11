@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
-import 'package:tflite_app/services.dart';
+import 'package:tflite_app/services/tflite_service.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'dart:io';
