@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tflite_app/screens/model_screen.dart';
-import 'services.dart';
+import 'package:tflite_app/services/tflite_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,10 +18,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Clasificador de Imagenes',
+      title: 'Clasificador de Imagenes con TFLite',
       theme: ThemeData(
         // This is the theme of your application.
-        colorScheme: .fromSeed(seedColor: Colors.white),
+        colorScheme: .fromSeed(seedColor: Colors.blue),
       ),
       home: ModelScreen(tfService: tfService),
       debugShowCheckedModeBanner: false,
