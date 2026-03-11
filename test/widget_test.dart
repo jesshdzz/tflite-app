@@ -8,14 +8,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tflite_app/main.dart';
-import 'package:tflite_app/services/tflite_service.dart';
 
 void main() async {
-  final tfService = TFService();
-  await tfService.loadModel();
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp(tfService: tfService));
+    await tester.pumpWidget(MyApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

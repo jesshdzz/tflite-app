@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image_picker/image_picker.dart';
 import 'package:tflite_app/services/tflite_service.dart';
-import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
-import 'dart:io';
+import 'package:tflite_app/widgets/image_preview_widget.dart';
+import 'package:tflite_app/widgets/result_card_widget.dart';
+import 'package:tflite_app/widgets/action_buttons_widget.dart';
 
 class ModelScreen extends StatefulWidget {
   const ModelScreen({super.key});
@@ -141,83 +141,53 @@ class ModelScreenState extends State<ModelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Clasificador de imágenes")),
+      appBar: AppBar(title: const Text("Clasificador de imágenes")),
       body: SingleChildScrollView(
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _image == null
-                  ? Padding(
-                      padding: const EdgeInsets.all(16.0),
+          child: ListenableBuilder(
+            listenable: _controller,
+            builder: (BuildContext context, Widget? child) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_controller.image == null)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
                       child: Text(
                         "Primero seleccione una imagen, luego presione Ejecutar Modelo",
                         textAlign: TextAlign.center,
                       ),
                     )
-                  : SizedBox(height: 20),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey, width: 2),
-                  borderRadius: BorderRadius.circular(5),
-                  color: Colors.grey.shade200,
-                ),
-                width: 300,
-                height: 300,
-                child: _image != null
-                    ? Image.file(_image!)
-                    : Center(child: Icon(Icons.image, size: 100, color: Colors.grey)),
-              ),
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 10,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: Icon(Icons.camera_alt),
-                    label: Text("Foto"),
+                  else
+                    const SizedBox(height: 20),
+
+                  ImagePreviewWidget(image: _controller.image),
+
+                  const SizedBox(height: 15),
+                  ActionButtonsWidget(
+                    onCameraPressed: () => _onPickImage(ImageSource.camera),
+                    onGalleryPressed: () => _onPickImage(ImageSource.gallery),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: Icon(Icons.image),
-                    label: Text("Imagen"),
+
+                  const SizedBox(height: 50),
+                  ElevatedButton(
+                    onPressed: _controller.isEnabled && !_controller.isLoading
+                        ? _controller.runModel
+                        : null,
+                    child: const Text("Ejecutar Modelo"),
                   ),
-                ],
-              ),
-              SizedBox(height: 50),
-              ElevatedButton(
-                onPressed: _isEnabled && !_isLoading ? _runModel : null,
-                child: Text("Ejecutar Modelo"),
-              ),
-              SizedBox(height: 20),
-              _isLoading
-                  ? CircularProgressIndicator()
-                  : _output.isEmpty
-                  ? SizedBox()
-                  : Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              _output,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: 10),
-                            LinearProgressIndicator(value: _confidence / 100),
-                            SizedBox(height: 5),
-                            Text(
-                              "Confianza: ${_confidence.toStringAsFixed(2)}%",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
+
+                  const SizedBox(height: 20),
+                  if (_controller.isLoading)
+                    const CircularProgressIndicator()
+                  else if (_controller.output.isNotEmpty)
+                    ResultCardWidget(
+                      output: _controller.output,
+                      confidence: _controller.confidence,
                     ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
