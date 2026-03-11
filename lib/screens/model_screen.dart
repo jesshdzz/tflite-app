@@ -16,8 +16,9 @@ class ModelScreen extends StatefulWidget {
 
 class ModelScreenState extends State<ModelScreen> {
   List<String> _etiquetas = [];
-  String _output = "Presione en Seleccionar Imagen para seleccionar una imagen";
+  String _output = " ";
   File? _image;
+  bool _isEnabled = false;
 
   var customLogger = Logger(
     printer: PrettyPrinter(
@@ -58,13 +59,14 @@ class ModelScreenState extends State<ModelScreen> {
     return maxIndex;
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(source: source);
 
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
+        _isEnabled = true;
       });
     }
   }
@@ -107,13 +109,29 @@ class ModelScreenState extends State<ModelScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _image == null
-                  ? Text("Seleccione primero una imagen")
+                  ? Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "Primero seleccione una imagen, luego presione Ejecutar Modelo",
+                        textAlign: TextAlign.center,
+                      ),
+                    )
                   : Image.file(_image!, height: 200),
               SizedBox(height: 50),
-
-              ElevatedButton(onPressed: _pickImage, child: Text("Seleccionar Imagen")),
+              ElevatedButton(
+                onPressed: () => _pickImage(ImageSource.camera),
+                child: Text("Tomar Foto"),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () => _pickImage(ImageSource.gallery),
+                child: Text("Seleccionar Imagen"),
+              ),
               SizedBox(height: 50),
-              ElevatedButton(onPressed: _runModel, child: Text("Ejecutar Modelo")),
+              ElevatedButton(
+                onPressed: _isEnabled ? _runModel : null,
+                child: Text("Ejecutar Modelo"),
+              ),
               SizedBox(height: 50),
               Text(_output, textAlign: TextAlign.center),
             ],
