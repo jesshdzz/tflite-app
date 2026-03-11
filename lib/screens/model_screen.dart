@@ -69,6 +69,8 @@ class ModelScreenState extends State<ModelScreen> {
       setState(() {
         _image = File(pickedFile.path);
         _isEnabled = true;
+        _output = "";
+        _confidence = 0.0;
       });
     }
   }
@@ -119,7 +121,7 @@ class ModelScreenState extends State<ModelScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              !_isEnabled
+              _image == null
                   ? Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
